@@ -3,7 +3,6 @@ import importlib
 from assets import *
 
 
-
 class Map():
     def __init__(self, width, height, squareSideLength):
         self.width = width
@@ -28,8 +27,6 @@ class Snack():
             self.position.x = map.squareSideLength*random.randint(0,map.getWidthInSquares()-1)
         while (self.position.y == 0 or self.position.y == self.map.height - self.map.squareSideLength):
             self.position.y = map.squareSideLength*random.randint(0,map.getHeightInSquares()-1)
-
-
 
 class Snake():
     def __init__(self, startingPoint, velocity, map):
@@ -68,6 +65,7 @@ class Game():
         self.snake = Snake(Point(350,200), Velocity("Right"), self.map)
         self.snack = Snack( self.map)
         self.score = 0
+        self.gameNumber = 1
 
     def drawGrid(self):
         x = 0
@@ -98,6 +96,7 @@ class Game():
         self.snake = Snake(Point(350,200), Velocity("Right"), self.map)
         self.snack = Snack(self.map)
         self.score = 0
+        self.gameNumber += 1
 
     def redrawWindow(self):
         self.screen.fill((0,0,0))
@@ -132,6 +131,7 @@ class Game():
     def handleEvents(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.display.quit()
                 pygame.quit()
             keys = pygame.key.get_pressed()
             for key in keys:
@@ -146,15 +146,18 @@ class Game():
 
 
 
+
 pygame.init()
-game = Game(500, 500, 25)
+game = Game(400, 400, 25)
 import NNAgent
 agent = NNAgent.Agent(game)
 clock = pygame.time.Clock()
 
+
+
 while 1:
-    agent.agentUpdate()
+    agent.update()
     game.update()
     game.redrawWindow()
-    pygame.time.delay(50)
-    clock.tick(10)
+    # pygame.time.delay(50)
+    # clock.tick(10)

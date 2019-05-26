@@ -8,11 +8,11 @@ from assets import *
 class Agent:
     def __init__(self, game):
         self.game = game
-        self.neuralNetwork = MLPClassifier(solver='adam', alpha=1e-4,hidden_layer_sizes=(20, 20), random_state=1)
+        self.neuralNetwork = MLPClassifier(solver='lbfgs', alpha=1e-4,hidden_layer_sizes=(20, 20, 20), random_state=1)
         self.dataFrame = 0
         self.gameNumber = game.gameNumber
         self.features = [ 'index', 'length', 'isSnackOnTheLeft', 'isSnackOnTheRight', 'isSnackHigher', 'isSnackLower',
-         'distanceToSnack', 'isLeftClear', 'isRightClear', 'isUpClear', 'isDownClear', 'stepEvaluation', 'step' ]
+         'distanceToSnack', 'isLeftClear', 'isRightClear', 'isUpClear', 'isDownClear','distanceToDeath', 'stepEvaluation', 'step' ]
         self.initDataset()
         from sklearn.preprocessing import MinMaxScaler
         self.scaler = MinMaxScaler(feature_range=(0, 1))
@@ -57,15 +57,29 @@ class Agent:
         return self.game.snack.position.y<self.game.snake.body[0].position.y
     def isSnackLower(self):
         return self.game.snack.position.y>self.game.snake.body[0].position.y
+    def distanceToDeath(self):
+        i = 1
+        square = Point(self.game.snake.body[0].position.x, self.game.snake.body[0].position.y)
+        while 1:
+            square.x = square.x + self.game.map.squareSideLength * self.game.snake.velocity.vX
+            square.y = square.y + self.game.map.squareSideLength * self.game.snake.velocity.vY
+
+            for snakeSquare in self.game.snake.body[1:]:
+                if snakeSquare.position.x == square.x and snakeSquare.position.y == square.y:
+                    return i
+            if square.x == 0 or square.x == self.game.map.width-self.game.map.squareSideLength:
+                return i
+            if square.y == 0 or square.y == self.game.map.height-self.game.map.squareSideLength:
+                return i
+            i+=1
 
     def predictMove(self):
         newRow = [ self.game.score, self.isSnackOnTheLeft(), self.isSnackOnTheRight(), self.isSnackHigher(), self.isSnackLower(), self.getDistanceToSnack(),
-        self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down")]
+        self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down"), self.distanceToDeath()]
         df = self.dataFrame.iloc[[0]]
         df = df[self.features[1:-2]]
         df.loc[1] = newRow
         df[df.columns] = self.scaler.transform(df[df.columns])
-
         move = self.neuralNetwork.predict(df)
         self.game.snake.velocity = Velocity(move[0])
 
@@ -88,18 +102,16 @@ class Agent:
             self.gameNumber += 1
 
         newRow = [ self.game.score+1, self.isSnackOnTheLeft(), self.isSnackOnTheRight(), self.isSnackHigher(), self.isSnackLower(), self.getDistanceToSnack(),
-        self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down"), 0, "empty"]
+        self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down"), self.distanceToDeath(), 0, "empty"]
         self.dataFrame.loc[len(self.dataFrame.index)+1] = newRow
 
         self.predictMove()
 
     def learn(self):
         dataTrain = pd.read_csv('trainingData.csv', index_col=0)
-        dataCorrect = dataTrain[dataTrain['stepEvaluation'] >10]
+        dataCorrect = dataTrain[dataTrain['stepEvaluation'] >= 5 ]
 
-        #print(dataTrain)
 
-        #dataCorrect.to_csv('dataCorrect.csv')
         xTrain = dataCorrect[self.features[1:-2]]
         yTrain = dataCorrect["step"]
 

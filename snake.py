@@ -62,7 +62,7 @@ class Game():
     def __init__(self, width, height, squareSideLength):
         self.screen = pygame.display.set_mode((width, height))
         self.map = Map(width, height, squareSideLength)
-        self.snake = Snake(Point(350,200), Velocity("Right"), self.map)
+        self.snake = Snake(Point(200,200), Velocity("Right"), self.map)
         self.snack = Snack( self.map)
         self.score = 0
         self.gameNumber = 1
@@ -93,7 +93,7 @@ class Game():
 
     def lose(self):
         print("You lost, score: ", self.score)
-        self.snake = Snake(Point(350,200), Velocity("Right"), self.map)
+        self.snake = Snake(Point(200,200), Velocity("Right"), self.map)
         self.snack = Snack(self.map)
         self.score = 0
         self.gameNumber += 1

@@ -39,8 +39,7 @@ class Snake():
 
     def move(self):
         snakeHead = self.body[0]
-        snakeHead.velocity.vX = self.velocity.vX;
-        snakeHead.velocity.vY = self.velocity.vY;
+        snakeHead.velocity = copy.deepcopy(self.velocity)
         previousPosition = copy.deepcopy(snakeHead)
         snakeHead.position.x += self.map.squareSideLength*self.velocity.vX
         snakeHead.position.y += self.map.squareSideLength*self.velocity.vY
@@ -117,7 +116,7 @@ class Game():
             self.snack = Snack(self.map)
             self.score+=1
             lastSnakeBody = self.snake.body[-1]
-            newSnakeBodySquare=BodySquare(Point(lastSnakeBody.position.x - self.map.squareSideLength*lastSnakeBody.velocity.vX , lastSnakeBody.position.y- self.map.squareSideLength*lastSnakeBody.velocity.vY), self.snake.body[-1].velocity)
+            newSnakeBodySquare=BodySquare(Point(lastSnakeBody.position.x - self.map.squareSideLength*lastSnakeBody.velocity.vX , lastSnakeBody.position.y- self.map.squareSideLength*lastSnakeBody.velocity.vY), Velocity(self.snake.body[-1].velocity.dir))
             self.snake.body.append(newSnakeBodySquare)
         headPosition = self.snake.body[0].position
         for snakeSquare in self.snake.body[1:]:
@@ -149,8 +148,8 @@ class Game():
 
 pygame.init()
 game = Game(400, 400, 25)
-import NNAgent
-agent = NNAgent.Agent(game)
+import NNHumanAgent
+agent = NNHumanAgent.Agent(game)
 clock = pygame.time.Clock()
 
 

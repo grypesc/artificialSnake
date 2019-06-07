@@ -10,15 +10,16 @@ import time
 class Agent:
     def __init__(self, game):
         self.game = game
-        self.neuralNetwork = MLPClassifier(solver='adam', alpha=1e-4,hidden_layer_sizes=(20), random_state=1)
+        self.neuralNetwork = MLPClassifier(solver='adam', alpha=1e-5,hidden_layer_sizes=(50), random_state=1)
         self.dataFrame = 0
         self.startingTime = time.time()
-        self.generation = 1
+
         self.gameNumber = game.gameNumber
         self.features = [ 'index', 'length', 'isSnackOnTheLeft', 'isSnackOnTheRight', 'isSnackHigher', 'isSnackLower',
          'distanceToSnack', 'isLeftClear', 'isRightClear', 'isUpClear', 'isDownClear','distanceToDeath',
           'turnsTotal', 'lastTurn',  'stepEvaluation', 'step' ]
         self.initDataset()
+
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.learn()
 
@@ -97,24 +98,16 @@ class Agent:
         return i
 
     def predictMove(self):
-        newRow = [ self.game.score, self.isSnackOnTheLeft(), self.isSnackOnTheRight(), self.isSnackHigher(), self.isSnackLower(),
+        newRow = [ self.game.score, self.isSnackOnTheLeft(), self.isSnackOnTheRight(), self.isSnackHigher(), self.isSnackLower(), self.getDistanceToSnack(),
         self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down"), self.distanceToDeath(),
         self.turnsTotal(), self.lastTurn()]
         df = self.dataFrame.iloc[[0]]
         df = df[self.features[1:-2]]
-        df.drop("distanceToSnack", inplace=True, axis=1)
         df.loc[1] = newRow
         df[df.columns] = self.scaler.transform(df[df.columns])
         move = self.neuralNetwork.predict(df)
-        prob = self.neuralNetwork.predict_proba(df)
-        possibilities = ["Right", "Left", "Up", "Down"]
-        if prob[0][0]<0.6 and prob[0][1]<0.6 and prob[0][len(prob[0])-1]<0.6 and prob[0][len(prob[0])-2]<0.6 :
-            move = (possibilities[random.randint(0, 3)])
-            self.game.snake.velocity = Velocity(move)
-            self.dataFrame.at[len(self.dataFrame.index), "step"] = move;
-        else:
-            self.game.snake.velocity = Velocity(move[0])
-            self.dataFrame.at[len(self.dataFrame.index), "step"] = move[0];
+        self.game.snake.velocity = Velocity(move[0])
+        self.dataFrame.at[len(self.dataFrame.index), "step"] = move[0];
 
 
     def previousStepEvaluation(self):
@@ -129,21 +122,9 @@ class Agent:
             self.dataFrame.at[len(self.dataFrame.index)-1, "step"] = self.game.snake.velocity.dir;
 
     def learn(self):
-
-        if (self.generation == 1):
-            dataTrain = pd.read_csv('startingData.csv', index_col=0)
-        else :
-            dataTrain = pd.read_csv('data.csv', index_col=0)
-
-        if self.generation % 4 == 0:
-            self.dataFrame = self.dataFrame.iloc[math.floor(len(self.dataFrame.index)/4):]
-            self.dataFrame.index = range(1,len(self.dataFrame)+1)
-        print("GENERATION: ", self.generation)
-        dataCorrect = dataTrain[dataTrain['stepEvaluation'] >= 6 ]
-        dataCorrect.drop("distanceToSnack", inplace=True, axis=1)
-        learningFeatures = copy.deepcopy(self.features[1:-2])
-        learningFeatures.remove("distanceToSnack")
-        xTrain = dataCorrect[learningFeatures]
+        dataTrain = pd.read_csv('trainingData.csv', index_col=0)
+        dataCorrect = dataTrain[dataTrain['stepEvaluation'] >= 5 ]
+        xTrain = dataCorrect[self.features[1:-2]]
         yTrain = dataCorrect["step"]
         xTrain[xTrain.columns] = self.scaler.fit_transform(xTrain[xTrain.columns])
         self.neuralNetwork.fit(xTrain, yTrain)
@@ -153,17 +134,11 @@ class Agent:
         #self.updateDatasetByHuman()
         self.previousStepEvaluation()
         if(self.game.gameNumber > self.gameNumber): #game was lost
+            self.saveDataset()
             self.gameNumber += 1
+
         newRow = [ self.game.score+1, self.isSnackOnTheLeft(), self.isSnackOnTheRight(), self.isSnackHigher(), self.isSnackLower(), self.getDistanceToSnack(),
         self.isSquareClear("Left"), self.isSquareClear("Right"), self.isSquareClear("Up"), self.isSquareClear("Down"), self.distanceToDeath(),
         self.turnsTotal(), self.lastTurn(),  0, "empty"]
         self.dataFrame.loc[len(self.dataFrame.index)+1] = newRow
         self.predictMove()
-
-        if(time.time() - self.startingTime > 4 + self.generation*0.5):
-            self.game.lose()
-            self.gameNumber = self.game.gameNumber
-            self.generation+=1
-            self.saveDataset()
-            self.learn()
-            self.startingTime = time.time()

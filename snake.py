@@ -148,8 +148,8 @@ class Game():
 
 pygame.init()
 game = Game(400, 400, 25)
-import selfLearningAgent
-agent = selfLearningAgent.Agent(game)
+import datasetAgent
+agent = datasetAgent.Agent(game)
 clock = pygame.time.Clock()
 
 

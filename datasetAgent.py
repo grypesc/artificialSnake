@@ -10,7 +10,7 @@ import time
 class Agent:
     def __init__(self, game):
         self.game = game
-        self.neuralNetwork = MLPClassifier(solver='adam', alpha=1e-5,hidden_layer_sizes=(30,30, 30), random_state=1)
+        self.neuralNetwork = MLPClassifier(solver='adam', alpha=1e-5,hidden_layer_sizes=(20, 50, 70, 50, 20), random_state=1)
         self.dataFrame = 0
         self.startingTime = time.time()
 

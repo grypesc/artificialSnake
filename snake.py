@@ -91,7 +91,7 @@ class Game():
         pygame.draw.rect(self.screen,self.snack.color,(self.snack.position.x,self.snack.position.y,self.map.squareSideLength,self.map.squareSideLength))
 
     def lose(self):
-        print("You lost, score: ", self.score)
+        #print("You lost, score: ", self.score)
         self.snake = Snake(Point(200,200), Velocity("Right"), self.map)
         self.snack = Snack(self.map)
         self.score = 0
@@ -148,8 +148,8 @@ class Game():
 
 pygame.init()
 game = Game(400, 400, 25)
-import NNHumanAgent
-agent = NNHumanAgent.Agent(game)
+import selfLearningAgent
+agent = selfLearningAgent.Agent(game)
 clock = pygame.time.Clock()
 
 

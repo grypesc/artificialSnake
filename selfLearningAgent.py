@@ -108,7 +108,7 @@ class Agent:
         move = self.neuralNetwork.predict(df)
         prob = self.neuralNetwork.predict_proba(df)
         possibilities = ["Right", "Left", "Up", "Down"]
-        probThreshold = min(0.90, 0.60 + float(self.generation)/200.0);
+        probThreshold = min(0.90, 0.65 + float(self.generation)/200.0);
         if prob[0][0]<probThreshold and prob[0][1]<probThreshold and prob[0][len(prob[0])-1]<probThreshold and prob[0][len(prob[0])-2]<probThreshold :
             move = (possibilities[random.randint(0, 3)])
             self.game.snake.velocity = Velocity(move)
@@ -137,7 +137,7 @@ class Agent:
             self.dataFrame = self.dataFrame.iloc[math.floor(len(self.dataFrame.index)/10):]
             self.dataFrame.index = range(1,len(self.dataFrame)+1)
         print("GENERATION: ", self.generation)
-        dataCorrect = self.dataFrame[self.dataFrame['stepEvaluation'] >= 6 ]
+        dataCorrect = self.dataFrame[self.dataFrame['stepEvaluation'] >= 7 ]
         dataCorrect.drop("distanceToSnack", inplace=True, axis=1)
         learningFeatures = copy.deepcopy(self.features[1:-2])
         learningFeatures.remove("distanceToSnack")

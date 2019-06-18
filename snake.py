@@ -14,6 +14,8 @@ class Map():
         return (int)(self.width/self.squareSideLength)
     def getHeightInSquares(self):
         return (int)(self.height/self.squareSideLength)
+    def getCenterSquare(self):
+        return Point( (int)(self.getWidthInSquares()//2)*self.squareSideLength, (int)(self.getHeightInSquares()//2)*self.squareSideLength )
 
 class Snack():
     def __init__(self, startingPoint, map):
@@ -61,7 +63,7 @@ class Game():
     def __init__(self, width, height, squareSideLength):
         self.screen = pygame.display.set_mode((width, height))
         self.map = Map(width, height, squareSideLength)
-        self.snake = Snake(Point(200,200), Velocity("Right"), self.map)
+        self.snake = Snake(self.map.getCenterSquare(), Velocity("Right"), self.map)
         self.snack = Snack( self.map)
         self.score = 0
         self.gameNumber = 1
@@ -92,7 +94,7 @@ class Game():
 
     def lose(self):
         #print("You lost, score: ", self.score)
-        self.snake = Snake(Point(200,200), Velocity("Right"), self.map)
+        self.snake = Snake(self.map.getCenterSquare(), Velocity("Right"), self.map)
         self.snack = Snack(self.map)
         self.score = 0
         self.gameNumber += 1
@@ -148,8 +150,8 @@ class Game():
 
 pygame.init()
 game = Game(400, 400, 25)
-import datasetAgent
-agent = datasetAgent.Agent(game)
+import selfLearningAgent
+agent = selfLearningAgent.Agent(game)
 clock = pygame.time.Clock()
 
 
